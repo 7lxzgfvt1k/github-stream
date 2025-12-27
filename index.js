@@ -178,11 +178,20 @@ async function fetchEvents() {
                                     output += `${styleText('blue', 'Pull Request Review Thread URL:')} ${styleText(['underline', 'blue'], event.payload.thread.html_url)}`;
                                     break;
                                 case 'PushEvent':
-                                    // Assuming the first commit in the payload
-                                    if (event.payload.commits && event.payload.commits.length > 0) {
-                                        output += `${styleText('blue', 'Commit URL:')} ${styleText(['underline', 'blue'], event.payload.commits[0].url)} ${event.payload.commits[0].message?.split('\n').join(' \ ')}`;
+                                    // https://docs.github.com/en/rest/commits/commits?apiVersion=2022-11-28#get-a-commit
+                                    const [ owner, repo ] = event.repo.name.split('/');
+                                    const { data: { commit, files } } = await octokit.request('GET /repos/' + owner + '/' + repo + '/commits/' + event.payload.before + '', {
+                                        owner,
+                                        repo,
+                                        ref: event.payload.ref,
+                                        headers: {
+                                            'X-GitHub-Api-Version': '2022-11-28'
+                                        }
+                                    })
+                                    if (commit) {
+                                        output += `${styleText('blue', 'Commit URL:')} ${styleText(['underline', 'blue'], commit.url)} ${commit.message?.split('\n').join(' \ ')}`;
                                         if (lat && long && FEATURE_FLAG_GENERATE_COMMENTS) {
-                                            handlingResult = await handlePushEvent(event, user.location)
+                                            handlingResult = await handlePushEvent(event, user.location, commit, files)
                                             generatedComment = handlingResult.comment
                                         }
                                     }
@@ -262,15 +271,9 @@ async function fetchEvents() {
     }
 }
 
-async function handlePushEvent(event, location) {
+async function handlePushEvent(event, location, commit, files) {
     let generatedComment;
-    const { url } = event.payload.commits[0];
-    if (stopProcessingEvents) return;
-
-    const { files } = await (await _fetch(url, {
-        headers: { "Authorization": "Bearer " + githubKey }
-    })).json();
-
+    const { url } = commit;
     if (stopProcessingEvents) return;
 
     const PROMPT_1 = `
