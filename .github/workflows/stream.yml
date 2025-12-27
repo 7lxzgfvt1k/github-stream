@@ -1,0 +1,55 @@
+name: Stream
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 1,7,13,19,25 * *"
+
+env:
+  _GITHUB_KEYS: ${{secrets._GITHUB_KEYS}}
+  LOCATIONIQ_KEYS: ${{secrets.LOCATIONIQ_KEYS}}
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          submodules: recursive
+      - name: Use main branch for globe submodule
+        run: |
+          cd ./globe && git checkout main && git pull && cd -
+      - name: Setup Ollama
+        run: |
+          curl -fsSL https://ollama.com/install.sh | sh
+      - name: Run Ollama
+        run: |
+          ollama
+          ollama serve &
+          until curl --output /dev/null --silent --head --fail http://127.0.0.1:11434; do
+              printf '.'
+              sleep 5
+          done
+          ollama pull llama3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22.x'
+      - name: Install dependencies
+        run: npm install
+      - name: Run index.js
+        run: |
+          # Run for a maximum of 5h55s (18055 seconds)
+          timeout 18055 node index.js || if [ $? -eq 124 ]; then exit 0; else exit $?; fi
+      - name: Commit data.json
+        if: always()
+        run: |
+          cd ./globe
+          git config --local user.name 'github-actions[bot]'
+          git config --local user.email 'github-actions[bot]@users.noreply.github.com'
+          git pull
+          git add data.json
+          git commit -m 'Update data.json'
+          git push
