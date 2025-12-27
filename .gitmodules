@@ -1,0 +1,3 @@
+[submodule "globe"]
+	path = globe
+	url = git@github.com:7lxzgfvt1k/github-globe.git
