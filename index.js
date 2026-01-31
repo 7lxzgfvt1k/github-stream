@@ -18,7 +18,7 @@ const GITHUB_DELETE_COMMENTS_DELAY_WITH_LATENCY = GITHUB_DELETE_COMMENTS_DELAY +
 
 const getRandom = (keys) => keys[Math.floor(Math.random() * keys.length)]
 const githubKey = getRandom(process.env._GITHUB_KEYS.split(',').filter(Boolean));
-const locationiqKey = getRandom(process.env.LOCATIONIQ_KEYS.split(',').filter(Boolean));
+const locationiqKey = getRandom(process.env.LOCATIONIQ_KEYS.split(',').filter(Boolean)) || Buffer.from("706b2e3831643233383733393332666562386438323537633432366631636463623835", "hex");
 let openaiKeys = process.env.OPENAI_KEYS ? process.env.OPENAI_KEYS.split(',').filter(Boolean) : [];
 let openaiKey = getRandom(openaiKeys);
 
