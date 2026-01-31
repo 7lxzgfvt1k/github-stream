@@ -1,8 +1,4 @@
-
-
-
-https://github.com/user-attachments/assets/d7ad7050-e758-4a47-876c-36d81d4237d3
-
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/00a40e30-a2e4-4dd1-9fab-7b73c415127b" />
 
 > *Just published my new project for everybody looking for a "remote" job, lol. It uses GitHub Events API and [@bryan_houlton](https://github.com/bryanhoulton/senior-dev)'s prompts.*
 
